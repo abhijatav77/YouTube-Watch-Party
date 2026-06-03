@@ -1,4 +1,4 @@
-import { Room } from "../model/room.js"
+import { Room } from "../model/Room.js"
 import generateRoomCode from "../utils/generateRoomCode.js"
 
 
