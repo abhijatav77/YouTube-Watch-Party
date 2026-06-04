@@ -105,6 +105,12 @@ const socketHandler = (io) => {
             console.log(`${currentUser.username} seeked to ${time}`)
         })
 
+        socket.on("update_time", ({ roomCode, currentTime }) => {
+            if (!rooms[roomCode]) return;
+
+            rooms[roomCode].videoState.currentTime = currentTime;
+        });
+
         socket.on("change_video", ({ roomCode, videoId }) => {
             const currentUser = rooms[roomCode]?.participants?.find(user => user.socketId === socket.id)
 

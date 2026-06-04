@@ -24,28 +24,33 @@ const Room = () => {
     const lastTimeRef = useRef(0);
 
     useEffect(() => {
-    if (!canControl) return;
+        if (!canControl) return;
 
-    const interval = setInterval(() => {
-        if (!playerRef.current) return;
+        const interval = setInterval(() => {
+            if (!playerRef.current) return;
 
-        const currentTime = playerRef.current.getCurrentTime();
-
-        if (
-            Math.abs(currentTime - lastTimeRef.current) > 2
-        ) {
-            socket.emit("seek", {
+            socket.emit("update_time", {
                 roomCode,
-                time: currentTime,
+                currentTime: playerRef.current.getCurrentTime(),
             });
-        }
 
-        lastTimeRef.current = currentTime;
-    }, 1000);
+            const currentTime = playerRef.current.getCurrentTime();
 
-    return () => clearInterval(interval);
+            if (
+                Math.abs(currentTime - lastTimeRef.current) > 2
+            ) {
+                socket.emit("seek", {
+                    roomCode,
+                    time: currentTime,
+                });
+            }
 
-}, [canControl, roomCode]);
+            lastTimeRef.current = currentTime;
+        }, 1000);
+
+        return () => clearInterval(interval);
+
+    }, [canControl, roomCode]);
 
     useEffect(() => {
 
@@ -91,13 +96,22 @@ const Room = () => {
         })
 
         socket.on('sync_state', (state) => {
-            if (state.videoId) setVideoId(state.videoId);
-            if (playerRef.current) {
-                if (state.isPlaying) playerRef.current.playVideo();
-                else playerRef.current.pauseVideo();
-                playerRef.current.seekTo(state.currentTime, true)
+            if (state.videoId) {
+                setVideoId(state.videoId);
             }
-        })
+
+            setTimeout(() => {
+                if (!playerRef.current) return;
+
+                playerRef.current.seekTo(state.currentTime || 0, true);
+
+                if (state.isPlaying) {
+                    playerRef.current.playVideo();
+                } else {
+                    playerRef.current.pauseVideo();
+                }
+            }, 1000);
+        });
 
         socket.on('play', () => playerRef.current?.playVideo());
         socket.on('pause', () => playerRef.current?.pauseVideo());
@@ -148,9 +162,8 @@ const Room = () => {
                     </div>
                     <div className='text-right'>
                         <p className='text-white'>Welcome, <span className='text-pink-500'>{username}</span></p>
-                        <p className={`text-sm font-semibold ${
-                            myRole === 'Host' ? 'text-red-500' : myRole === 'Moderator' ? 'text-green-500' : 'text-yellow-500'
-                        }`}>
+                        <p className={`text-sm font-semibold ${myRole === 'Host' ? 'text-red-500' : myRole === 'Moderator' ? 'text-green-500' : 'text-yellow-500'
+                            }`}>
                             {myRole}
                         </p>
                     </div>
@@ -159,19 +172,19 @@ const Room = () => {
                 <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
                     <div className='lg:col-span-2 space-y-4'>
                         <VideoPlayer
-                            videoId = {videoId}
-                            onReady = {handlePlayerReady}
-                            onStateChange = {handleStateChange}
+                            videoId={videoId}
+                            onReady={handlePlayerReady}
+                            onStateChange={handleStateChange}
                             canControl={canControl}
                         />
-                        <Controls roomCode = {roomCode} canControl = {canControl} />
+                        <Controls roomCode={roomCode} canControl={canControl} />
                     </div>
 
-                    <Participants 
+                    <Participants
                         participants={participants}
-                        currentUserId = {socket.id}
-                        myRole = {myRole}
-                        roomCode = {roomCode}
+                        currentUserId={socket.id}
+                        myRole={myRole}
+                        roomCode={roomCode}
                     />
                 </div>
 
