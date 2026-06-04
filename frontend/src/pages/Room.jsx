@@ -21,6 +21,32 @@ const Room = () => {
 
     const canControl = myRole === 'Host' || myRole === 'Moderator'
 
+    const lastTimeRef = useRef(0);
+
+    useEffect(() => {
+    if (!canControl) return;
+
+    const interval = setInterval(() => {
+        if (!playerRef.current) return;
+
+        const currentTime = playerRef.current.getCurrentTime();
+
+        if (
+            Math.abs(currentTime - lastTimeRef.current) > 2
+        ) {
+            socket.emit("seek", {
+                roomCode,
+                time: currentTime,
+            });
+        }
+
+        lastTimeRef.current = currentTime;
+    }, 1000);
+
+    return () => clearInterval(interval);
+
+}, [canControl, roomCode]);
+
     useEffect(() => {
 
         if (!username) {

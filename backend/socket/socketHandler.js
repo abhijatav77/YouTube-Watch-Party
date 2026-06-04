@@ -22,7 +22,7 @@ const socketHandler = (io) => {
                     },
                 };
             }
-            
+
             const role = rooms[roomCode].participants.length === 0 ? "Host" : "Participant";
 
             const participant = {
@@ -31,10 +31,10 @@ const socketHandler = (io) => {
                 role,
             };
 
-            if(!username?.trim()) {
+            if (!username?.trim()) {
                 return;
             }
-            
+
             rooms[roomCode].participants.push(participant);
 
             socket.join(roomCode);
@@ -61,6 +61,11 @@ const socketHandler = (io) => {
             }
 
             rooms[roomCode].videoState.isPlaying = true;
+
+            if (socket.currentTime) {
+                rooms[roomCode].videoState.currentTime =
+                    socket.currentTime;
+            }
 
             io.to(roomCode).emit("play")
 
@@ -93,8 +98,9 @@ const socketHandler = (io) => {
             }
 
             rooms[roomCode].videoState.currentTime = time
+            socket.currentTime = time
 
-            io.to(roomCode).emit("seek", { time })
+            socket.to(roomCode).emit("seek", { time })
 
             console.log(`${currentUser.username} seeked to ${time}`)
         })
@@ -177,18 +183,18 @@ const socketHandler = (io) => {
             console.log(`${targetUser.username} removed from room`)
         })
 
-        socket.on("transfer_host", ({roomCode, userId}) => {
+        socket.on("transfer_host", ({ roomCode, userId }) => {
             const currentUser = rooms[roomCode]?.participants?.find(user => user.socketId === socket.id)
 
-            if(!currentUser) return;
+            if (!currentUser) return;
 
-            if(currentUser.role !== 'Host'){
+            if (currentUser.role !== 'Host') {
                 return;
             }
 
             const targetUser = rooms[roomCode]?.participants?.find(user => user.socketId === userId)
 
-            if(!targetUser) return;
+            if (!targetUser) return;
 
             currentUser.role = "Participant";
 
@@ -224,7 +230,7 @@ const socketHandler = (io) => {
                 participants: updatedParticipants
             })
 
-            if(updatedParticipants.length === 0) {
+            if (updatedParticipants.length === 0) {
                 delete rooms[roomCode]
             }
 
@@ -250,7 +256,7 @@ const socketHandler = (io) => {
                         participants: updateParticipants
                     })
 
-                    if(updateParticipants.length === 0) {
+                    if (updateParticipants.length === 0) {
                         delete rooms[roomCode]
                     }
 
