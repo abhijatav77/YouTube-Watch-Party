@@ -16,13 +16,12 @@ const socketHandler = (io) => {
                     participants: [],
 
                     videoState: {
-                        videoId: "",
+                        videoId: "TQqBjSAK52s",
                         currentTime: 0,
                         isPlaying: false,
                     },
                 };
             }
-
             const role = rooms[roomCode].participants.length === 0 ? "Host" : "Participant";
 
             const participant = {
@@ -112,22 +111,21 @@ const socketHandler = (io) => {
         });
 
         socket.on("change_video", ({ roomCode, videoId }) => {
-            const currentUser = rooms[roomCode]?.participants?.find(user => user.socketId === socket.id)
+            const currentUser =
+                rooms[roomCode]?.participants?.find(
+                    user => user.socketId === socket.id
+                );
 
             if (!currentUser) return;
 
-            if (!canControlVideo(currentUser.role)) {
-                return;
-            }
+            if (!canControlVideo(currentUser.role)) return;
 
-            rooms[roomCode].videoState.videoId = videoId
-
+            rooms[roomCode].videoState.videoId = videoId;
             rooms[roomCode].videoState.currentTime = 0;
+            rooms[roomCode].videoState.isPlaying = false;
 
-            io.to(roomCode).emit("change_video", { videoId })
-
-            console.log(`${currentUser.username} changed video to ${videoId}`)
-        })
+            io.to(roomCode).emit("change_video", { videoId });
+        });
 
         socket.on("assign_role", ({ roomCode, userId, role }) => {
             const currentUser = rooms[roomCode]?.participants?.find(user => user.socketId === socket.id)

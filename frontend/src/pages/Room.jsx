@@ -17,7 +17,9 @@ const Room = () => {
     const [participants, setParticipants] = useState([])
     const [videoId, setVideoId] = useState('TQqBjSAK52s')
     const [myRole, setMyRole] = useState('Participant');
+    const [pendingSync, setPendingSync] = useState(null);
     const playerRef = useRef(null)
+    const pendingSyncRef = useRef(null);
 
     const canControl = myRole === 'Host' || myRole === 'Moderator'
 
@@ -95,22 +97,13 @@ const Room = () => {
             if (me) setMyRole(me.role)
         })
 
-        socket.on('sync_state', (state) => {
+        socket.on("sync_state", (state) => {
+
+            pendingSyncRef.current = state;
+
             if (state.videoId) {
                 setVideoId(state.videoId);
             }
-
-            setTimeout(() => {
-                if (!playerRef.current) return;
-
-                playerRef.current.seekTo(state.currentTime || 0, true);
-
-                if (state.isPlaying) {
-                    playerRef.current.playVideo();
-                } else {
-                    playerRef.current.pauseVideo();
-                }
-            }, 1000);
         });
 
         socket.on('play', () => playerRef.current?.playVideo());
@@ -137,7 +130,22 @@ const Room = () => {
 
     const handlePlayerReady = (player) => {
         playerRef.current = player;
-    }
+
+        const sync = pendingSyncRef.current;
+
+        if (!sync) return;
+
+        setTimeout(() => {
+            player.seekTo(sync.currentTime || 0, true);
+
+            if (sync.isPlaying) {
+                player.playVideo();
+            } else {
+                player.pauseVideo();
+            }
+        }, 1000);
+    };
+
     const handleStateChange = (event) => {
         if (!canControl) return;
         if (event.data === 1) socket.emit('play', { roomCode })
