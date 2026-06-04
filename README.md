@@ -4,9 +4,9 @@ A real-time YouTube Watch Party application that allows multiple users to watch 
 
 ## 🚀 Live Demo
 
-Frontend: https://your-frontend-url.vercel.app
+Frontend: [Frontend YouTube Watch Party](https://you-tube-watch-party-xi.vercel.app/)
 
-Backend: https://your-backend-url.onrender.com
+Backend: [Backend YouTube Watch Party](https://youtube-watch-party-alp8.onrender.com)
 
 ---
 
